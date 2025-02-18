@@ -17,11 +17,15 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     // Check initial auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
+      if (session?.user?.user_metadata?.role) {
+        setUserRole(session.user.user_metadata.role);
+      }
     });
 
     // Listen for auth changes
@@ -29,6 +33,9 @@ const App = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
+      if (session?.user?.user_metadata?.role) {
+        setUserRole(session.user.user_metadata.role);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -39,6 +46,12 @@ const App = () => {
     return null;
   }
 
+  const getDashboardRedirect = () => {
+    if (!isAuthenticated) return "/auth";
+    if (!userRole) return "/";
+    return `/dashboard/${userRole}`;
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -48,23 +61,47 @@ const App = () => {
           <Routes>
             <Route
               path="/"
-              element={isAuthenticated ? <Navigate to="/dashboard/student" /> : <Index />}
+              element={isAuthenticated ? <Navigate to={getDashboardRedirect()} /> : <Index />}
             />
             <Route
               path="/auth"
-              element={isAuthenticated ? <Navigate to="/dashboard/student" /> : <Auth />}
+              element={isAuthenticated ? <Navigate to={getDashboardRedirect()} /> : <Auth />}
             />
             <Route
               path="/dashboard/student/*"
-              element={!isAuthenticated ? <Navigate to="/auth" /> : <StudentDashboard />}
+              element={
+                !isAuthenticated ? (
+                  <Navigate to="/auth" />
+                ) : userRole !== "student" ? (
+                  <Navigate to={getDashboardRedirect()} />
+                ) : (
+                  <StudentDashboard />
+                )
+              }
             />
             <Route
               path="/dashboard/teacher/*"
-              element={!isAuthenticated ? <Navigate to="/auth" /> : <TeacherDashboard />}
+              element={
+                !isAuthenticated ? (
+                  <Navigate to="/auth" />
+                ) : userRole !== "teacher" ? (
+                  <Navigate to={getDashboardRedirect()} />
+                ) : (
+                  <TeacherDashboard />
+                )
+              }
             />
             <Route
               path="/dashboard/admin/*"
-              element={!isAuthenticated ? <Navigate to="/auth" /> : <AdminDashboard />}
+              element={
+                !isAuthenticated ? (
+                  <Navigate to="/auth" />
+                ) : userRole !== "admin" ? (
+                  <Navigate to={getDashboardRedirect()} />
+                ) : (
+                  <AdminDashboard />
+                )
+              }
             />
             <Route path="*" element={<NotFound />} />
           </Routes>

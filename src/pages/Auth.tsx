@@ -42,12 +42,19 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
+
+        // Check if the user's role matches the requested role
+        const userRole = data.user?.user_metadata?.role;
+        if (userRole !== role) {
+          await supabase.auth.signOut();
+          throw new Error(`You are not registered as a ${role}. Please use the correct role or sign up.`);
+        }
 
         navigate(`/dashboard/${role}`);
       } else {
