@@ -1,15 +1,10 @@
 
-import { LoginButton } from "@/components/LoginButton";
 import { RoleCard } from "@/components/RoleCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useState } from "react";
 
 const Index = () => {
-  const [selectedRole, setSelectedRole] = useState<"student" | "teacher" | "admin" | null>(null);
-
   return (
     <div className="min-h-screen w-full overflow-hidden">
-      <LoginButton />
       <ThemeToggle />
       
       <main className="container mx-auto px-4 py-20">
@@ -34,9 +29,9 @@ const Index = () => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-8 animate-fadeIn">
-            <RoleCard role="student" onClick={() => setSelectedRole("student")} />
-            <RoleCard role="teacher" onClick={() => setSelectedRole("teacher")} />
-            <RoleCard role="admin" onClick={() => setSelectedRole("admin")} />
+            <RoleCard role="student" />
+            <RoleCard role="teacher" />
+            <RoleCard role="admin" />
           </div>
         </div>
 
