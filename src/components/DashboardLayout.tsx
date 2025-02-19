@@ -78,7 +78,10 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                   {menuItems[role].map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton 
-                        onClick={() => navigate(item.path)}
+                        onClick={() => {
+                          console.log("Navigating to:", item.path);
+                          navigate(item.path);
+                        }}
                       >
                         <item.icon className="w-4 h-4" />
                         <span>{item.title}</span>
