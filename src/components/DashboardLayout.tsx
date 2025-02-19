@@ -27,9 +27,9 @@ const menuItems = {
   ],
   admin: [
     { title: "Dashboard", icon: Home, path: "/dashboard/admin" },
-    { title: "Add Teacher", icon: UserPlus, path: "/dashboard/admin" },
-    { title: "Add Student", icon: UserPlus, path: "/dashboard/admin" },
-    { title: "Add Class", icon: BookPlus, path: "/dashboard/admin" },
+    { title: "Add Teacher", icon: UserPlus, path: "/dashboard/admin/add-teacher" },
+    { title: "Add Student", icon: UserPlus, path: "/dashboard/admin/add-student" },
+    { title: "Add Class", icon: BookPlus, path: "/dashboard/admin/add-class" },
     { title: "Users", icon: Users, path: "/dashboard/admin/users" },
     { title: "Analytics", icon: BarChart, path: "/dashboard/admin/analytics" },
     { title: "Settings", icon: Settings, path: "/dashboard/admin/settings" },
