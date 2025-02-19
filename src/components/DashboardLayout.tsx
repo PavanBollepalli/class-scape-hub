@@ -77,14 +77,11 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
                 <SidebarMenu>
                   {menuItems[role].map((item) => (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton asChild>
-                        <button 
-                          onClick={() => navigate(item.path)}
-                          className="flex items-center gap-2 w-full"
-                        >
-                          <item.icon className="w-4 h-4" />
-                          <span>{item.title}</span>
-                        </button>
+                      <SidebarMenuButton 
+                        onClick={() => navigate(item.path)}
+                      >
+                        <item.icon className="w-4 h-4" />
+                        <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   ))}
