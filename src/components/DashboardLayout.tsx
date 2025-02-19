@@ -1,6 +1,6 @@
 
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
-import { GraduationCap, School, Settings, Home, Book, Calendar, Users, MessageSquare, BarChart, UserPlus, UsersPlus, BookPlus } from "lucide-react";
+import { GraduationCap, School, Settings, Home, Book, Calendar, Users, MessageSquare, BarChart, UserPlus, BookPlus } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,7 @@ const menuItems = {
   admin: [
     { title: "Dashboard", icon: Home, path: "/dashboard/admin" },
     { title: "Add Teacher", icon: UserPlus, path: "/dashboard/admin" },
-    { title: "Add Student", icon: UsersPlus, path: "/dashboard/admin" },
+    { title: "Add Student", icon: UserPlus, path: "/dashboard/admin" },
     { title: "Add Class", icon: BookPlus, path: "/dashboard/admin" },
     { title: "Users", icon: Users, path: "/dashboard/admin/users" },
     { title: "Analytics", icon: BarChart, path: "/dashboard/admin/analytics" },
