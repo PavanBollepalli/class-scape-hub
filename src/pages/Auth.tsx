@@ -1,6 +1,6 @@
 
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,10 +31,13 @@ const Auth = () => {
   const [fullName, setFullName] = useState("");
   const Icon = roleIcons[role];
 
-  if (!role) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!role) {
+      navigate("/");
+    }
+  }, [role, navigate]);
+
+  if (!role) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,12 +56,18 @@ const Auth = () => {
         const userRole = data.user?.user_metadata?.role;
         if (userRole !== role) {
           await supabase.auth.signOut();
-          throw new Error(`You are not registered as a ${role}. Please use the correct role or sign up.`);
+          throw new Error(`You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`);
         }
+
+        toast({
+          title: "Login successful",
+          description: `Welcome back!`,
+        });
 
         navigate(`/dashboard/${role}`);
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({
+        // Sign up flow
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -69,12 +78,15 @@ const Auth = () => {
           },
         });
 
-        if (signUpError) throw signUpError;
+        if (error) throw error;
 
-        toast({
-          title: "Account created successfully",
-          description: "Please check your email to verify your account.",
-        });
+        if (data.user) {
+          toast({
+            title: "Sign up successful",
+            description: "Please check your email to verify your account.",
+          });
+          // Don't navigate - wait for email verification
+        }
       }
     } catch (error: any) {
       toast({
