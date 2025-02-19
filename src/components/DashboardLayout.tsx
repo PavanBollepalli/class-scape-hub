@@ -1,5 +1,5 @@
 
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { GraduationCap, School, Settings, Home, Book, Calendar, Users, MessageSquare, BarChart } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useNavigate } from "react-router-dom";
@@ -59,51 +59,53 @@ export const DashboardLayout = ({ children, role }: DashboardLayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
-      <Sidebar>
-        <SidebarContent>
-          <div className="p-4 flex items-center gap-2">
-            <Icon className="w-6 h-6 text-primary" />
-            <span className="font-semibold">ClassScape</span>
-          </div>
-          
-          <SidebarGroup>
-            <SidebarGroupLabel>Menu</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {menuItems[role].map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <button 
-                        onClick={() => navigate(item.path)}
-                        className="flex items-center gap-2 w-full"
-                      >
-                        <item.icon className="w-4 h-4" />
-                        <span>{item.title}</span>
-                      </button>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <Sidebar>
+          <SidebarContent>
+            <div className="p-4 flex items-center gap-2">
+              <Icon className="w-6 h-6 text-primary" />
+              <span className="font-semibold">ClassScape</span>
+            </div>
+            
+            <SidebarGroup>
+              <SidebarGroupLabel>Menu</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {menuItems[role].map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <button 
+                          onClick={() => navigate(item.path)}
+                          className="flex items-center gap-2 w-full"
+                        >
+                          <item.icon className="w-4 h-4" />
+                          <span>{item.title}</span>
+                        </button>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-          <div className="mt-auto p-4 space-y-4">
-            <ThemeToggle />
-            <Button 
-              variant="outline" 
-              className="w-full" 
-              onClick={handleSignOut}
-            >
-              Sign out
-            </Button>
-          </div>
-        </SidebarContent>
-      </Sidebar>
-      
-      <main className="flex-1 p-6">
-        {children}
-      </main>
-    </div>
+            <div className="mt-auto p-4 space-y-4">
+              <ThemeToggle />
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={handleSignOut}
+              >
+                Sign out
+              </Button>
+            </div>
+          </SidebarContent>
+        </Sidebar>
+        
+        <main className="flex-1 p-6">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 };
