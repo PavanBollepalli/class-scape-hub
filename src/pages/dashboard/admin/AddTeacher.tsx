@@ -17,22 +17,33 @@ const AddTeacher = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // First, create the auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: teacherEmail,
         password: teacherPassword,
-        options: {
-          data: {
-            full_name: teacherName,
-            role: "teacher",
-          },
+        email_confirm: true,
+        user_metadata: {
+          full_name: teacherName,
+          role: "teacher",
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Then, update the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: teacherName,
+          role: "teacher",
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Teacher account created",
-        description: "An email has been sent for verification.",
+        description: "Teacher has been successfully added to the system.",
       });
 
       // Reset form
@@ -82,6 +93,7 @@ const AddTeacher = () => {
               value={teacherPassword}
               onChange={(e) => setTeacherPassword(e.target.value)}
               placeholder="••••••••"
+              minLength={6}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>

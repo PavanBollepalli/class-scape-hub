@@ -17,22 +17,33 @@ const AddStudent = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // First, create the auth user
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: studentEmail,
         password: studentPassword,
-        options: {
-          data: {
-            full_name: studentName,
-            role: "student",
-          },
+        email_confirm: true,
+        user_metadata: {
+          full_name: studentName,
+          role: "student",
         },
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Then, update the profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: studentName,
+          role: "student",
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
 
       toast({
         title: "Student account created",
-        description: "An email has been sent for verification.",
+        description: "Student has been successfully added to the system.",
       });
 
       // Reset form
@@ -82,6 +93,7 @@ const AddStudent = () => {
               value={studentPassword}
               onChange={(e) => setStudentPassword(e.target.value)}
               placeholder="••••••••"
+              minLength={6}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
