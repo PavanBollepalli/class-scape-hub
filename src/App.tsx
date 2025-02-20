@@ -9,6 +9,7 @@ import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import AddTeacher from "./pages/dashboard/admin/AddTeacher";
 import AddStudent from "./pages/dashboard/admin/AddStudent";
 import AddClass from "./pages/dashboard/admin/AddClass";
+import Users from "./pages/dashboard/admin/Users";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/dashboard/admin/add-teacher" element={<AddTeacher />} />
         <Route path="/dashboard/admin/add-student" element={<AddStudent />} />
         <Route path="/dashboard/admin/add-class" element={<AddClass />} />
+        <Route path="/dashboard/admin/users" element={<Users />} />
         
         {/* Teacher Routes */}
         <Route path="/dashboard/teacher" element={<TeacherDashboard />} />
