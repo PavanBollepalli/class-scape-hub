@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { GraduationCap, School, Settings } from "lucide-react";
 
 const roleIcons = {
@@ -45,16 +45,25 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        // Login flow
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        if (error) throw error;
+        if (signInError) throw signInError;
+
+        // Fetch user profile to verify role
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', signInData.user.id)
+          .single();
+
+        if (profileError) throw profileError;
 
         // Check if the user's role matches the requested role
-        const userRole = data.user?.user_metadata?.role;
-        if (userRole !== role) {
+        if (profileData.role !== role) {
           await supabase.auth.signOut();
           throw new Error(`You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`);
         }
@@ -67,7 +76,7 @@ const Auth = () => {
         navigate(`/dashboard/${role}`);
       } else {
         // Sign up flow
-        const { data, error } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -78,17 +87,31 @@ const Auth = () => {
           },
         });
 
-        if (error) throw error;
+        if (signUpError) throw signUpError;
 
-        if (data.user) {
+        // If sign up successful, create profile
+        if (signUpData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: signUpData.user.id,
+                email,
+                full_name: fullName,
+                role,
+              },
+            ]);
+
+          if (profileError) throw profileError;
+
           toast({
             title: "Sign up successful",
             description: "Please check your email to verify your account.",
           });
-          // Don't navigate - wait for email verification
         }
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         variant: "destructive",
         title: "Error",
