@@ -39,23 +39,48 @@ const Auth = () => {
 
   if (!role) return null;
 
+  const handleAuthError = (error: any) => {
+    console.error("Auth error:", error);
+    let message = error.message;
+    
+    // Handle rate limiting errors
+    if (error.message?.includes("security purposes")) {
+      message = "Please wait a moment before trying again.";
+    }
+    // Handle profile/role mismatch
+    else if (error.message?.includes("not registered as")) {
+      message = `You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`;
+    }
+    // Handle other common errors
+    else if (error.message?.includes("Email not confirmed")) {
+      message = "Please check your email and confirm your account before signing in.";
+    }
+
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: message,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading) return; // Prevent multiple submissions
     setIsLoading(true);
 
     try {
       if (isLogin) {
-        // First sign in
+        // Sign in flow
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (signInError) throw signInError;
-
         if (!signInData.user) throw new Error("No user found");
 
-        // Then get the user's profile
+        // Get user profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
@@ -64,10 +89,9 @@ const Auth = () => {
 
         if (profileError) throw profileError;
 
-        // If no profile found or role doesn't match
         if (!profile || profile.role !== role) {
           await supabase.auth.signOut();
-          throw new Error(`You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`);
+          throw new Error(`incorrect_role`);
         }
 
         toast({
@@ -90,7 +114,6 @@ const Auth = () => {
         });
 
         if (signUpError) throw signUpError;
-
         if (!signUpData.user) throw new Error("Failed to create user");
 
         // Create profile
@@ -103,12 +126,9 @@ const Auth = () => {
               full_name: fullName,
               role,
             },
-          ])
-          .select()
-          .single();
+          ]);
 
         if (profileError) {
-          // If profile creation fails, try to cleanup the auth user
           await supabase.auth.signOut();
           throw profileError;
         }
@@ -122,14 +142,10 @@ const Auth = () => {
         setEmail("");
         setPassword("");
         setFullName("");
+        setIsLogin(true); // Switch to login view
       }
     } catch (error: any) {
-      console.error("Auth error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "An error occurred",
-      });
+      handleAuthError(error);
     } finally {
       setIsLoading(false);
     }
@@ -164,6 +180,7 @@ const Auth = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
+                minLength={2}
               />
             </div>
           )}
@@ -194,9 +211,13 @@ const Auth = () => {
               minLength={6}
             />
           </div>
-          <Button className="w-full" type="submit" disabled={isLoading}>
+          <Button 
+            className="w-full" 
+            type="submit" 
+            disabled={isLoading}
+          >
             {isLoading
-              ? "Loading..."
+              ? "Please wait..."
               : isLogin
               ? "Sign in"
               : "Create account"}
@@ -206,7 +227,12 @@ const Auth = () => {
         <div className="text-center">
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={() => {
+              setIsLogin(!isLogin);
+              setEmail("");
+              setPassword("");
+              setFullName("");
+            }}
             className="text-sm text-primary hover:underline"
           >
             {isLogin
