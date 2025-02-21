@@ -45,7 +45,7 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        // Login flow
+        // First sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -53,17 +53,19 @@ const Auth = () => {
 
         if (signInError) throw signInError;
 
-        // Fetch user profile to verify role
-        const { data: profileData, error: profileError } = await supabase
+        if (!signInData.user) throw new Error("No user found");
+
+        // Then get the user's profile
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', signInData.user.id)
-          .single();
+          .maybeSingle();
 
         if (profileError) throw profileError;
 
-        // Check if the user's role matches the requested role
-        if (profileData.role !== role) {
+        // If no profile found or role doesn't match
+        if (!profile || profile.role !== role) {
           await supabase.auth.signOut();
           throw new Error(`You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`);
         }
@@ -89,33 +91,44 @@ const Auth = () => {
 
         if (signUpError) throw signUpError;
 
-        // If sign up successful, create profile
-        if (signUpData.user) {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: signUpData.user.id,
-                email,
-                full_name: fullName,
-                role,
-              },
-            ]);
+        if (!signUpData.user) throw new Error("Failed to create user");
 
-          if (profileError) throw profileError;
+        // Create profile
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            {
+              id: signUpData.user.id,
+              email,
+              full_name: fullName,
+              role,
+            },
+          ])
+          .select()
+          .single();
 
-          toast({
-            title: "Sign up successful",
-            description: "Please check your email to verify your account.",
-          });
+        if (profileError) {
+          // If profile creation fails, try to cleanup the auth user
+          await supabase.auth.signOut();
+          throw profileError;
         }
+
+        toast({
+          title: "Sign up successful",
+          description: "Please check your email to verify your account.",
+        });
+
+        // Reset form
+        setEmail("");
+        setPassword("");
+        setFullName("");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: error.message || "An error occurred",
       });
     } finally {
       setIsLoading(false);
@@ -178,6 +191,7 @@ const Auth = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
             />
           </div>
           <Button className="w-full" type="submit" disabled={isLoading}>
