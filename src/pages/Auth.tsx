@@ -34,20 +34,25 @@ const Auth = () => {
   useEffect(() => {
     if (!role) {
       navigate("/");
+      return;
     }
 
     // Check if user is already logged in
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        
-        if (profile?.role === role) {
-          navigate(`/dashboard/${role}`);
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+          
+          if (profile?.role === role) {
+            navigate(`/dashboard/${role}`);
+          }
+        } catch (error) {
+          console.error("Error checking profile:", error);
         }
       }
     };
@@ -71,6 +76,8 @@ const Auth = () => {
       message = "Please check your email and confirm your account before signing in.";
     } else if (error.message?.includes("User already registered")) {
       message = "This email is already registered. Please sign in instead.";
+    } else if (error.message === "Profile not found") {
+      message = "Account not found. Please sign up first.";
     }
 
     toast({
@@ -101,9 +108,9 @@ const Auth = () => {
           .from('profiles')
           .select('role')
           .eq('id', signInData.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profileError) {
+        if (profileError || !profile) {
           await supabase.auth.signOut();
           throw new Error("Profile not found");
         }
