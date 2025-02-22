@@ -52,14 +52,17 @@ const Auth = () => {
             return;
           }
 
-          console.log("Current profile:", profile);
-          console.log("Attempting role:", role);
-          
           if (profile?.role === role) {
+            console.log("User already logged in with correct role, redirecting...");
             navigate(`/dashboard/${role}`);
           } else if (profile) {
-            // User is logged in but with wrong role
+            console.log("User logged in with wrong role, signing out...");
             await supabase.auth.signOut();
+            toast({
+              variant: "destructive",
+              title: "Wrong role",
+              description: `You are registered as a ${roleLabels[profile.role]}. Please use the correct role to sign in.`
+            });
           }
         } catch (error) {
           console.error("Error checking profile:", error);
@@ -68,7 +71,7 @@ const Auth = () => {
     };
 
     checkSession();
-  }, [role, navigate]);
+  }, [role, navigate, toast]);
 
   if (!role) return null;
 
@@ -81,7 +84,7 @@ const Auth = () => {
     } else if (error.message?.includes("security purposes")) {
       message = "Please wait a moment before trying again.";
     } else if (error.message === "incorrect_role") {
-      message = `You are not registered as a ${roleLabels[role]}. Please use the correct role or sign up.`;
+      message = `You are not registered as a ${roleLabels[role]}. Please sign in with your correct role.`;
     } else if (error.message?.includes("Email not confirmed")) {
       message = "Please check your email and confirm your account before signing in.";
     } else if (error.message?.includes("User already registered")) {
@@ -113,16 +116,12 @@ const Auth = () => {
         if (signInError) throw signInError;
         if (!signInData.user) throw new Error("No user found");
 
-        console.log("Sign in successful, checking profile...");
-
         // Verify user's role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', signInData.user.id)
           .maybeSingle();
-
-        console.log("Profile check result:", { profile, profileError });
 
         if (profileError) {
           console.error("Profile error:", profileError);
@@ -136,12 +135,15 @@ const Auth = () => {
           throw new Error("Profile not found");
         }
 
-        console.log("Comparing roles:", { profileRole: profile.role, attemptedRole: role });
-
         if (profile.role !== role) {
           console.error("Role mismatch:", { profileRole: profile.role, attemptedRole: role });
           await supabase.auth.signOut();
-          throw new Error("incorrect_role");
+          toast({
+            variant: "destructive",
+            title: "Wrong role",
+            description: `You are registered as a ${roleLabels[profile.role]}. Please sign in with your correct role.`,
+          });
+          return;
         }
 
         toast({
@@ -149,7 +151,9 @@ const Auth = () => {
           description: "Successfully signed in!",
         });
 
-        navigate(`/dashboard/${role}`);
+        // Ensure we navigate to the dashboard
+        console.log("Navigating to dashboard:", `/dashboard/${role}`);
+        navigate(`/dashboard/${role}`, { replace: true });
       } else {
         // Sign up flow
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -165,8 +169,6 @@ const Auth = () => {
 
         if (signUpError) throw signUpError;
         if (!signUpData.user) throw new Error("Failed to create user");
-
-        console.log("Sign up successful, creating profile...");
 
         // Create profile with role
         const { error: profileError } = await supabase
