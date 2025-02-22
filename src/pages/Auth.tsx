@@ -1,4 +1,3 @@
-
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -42,14 +41,25 @@ const Auth = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         try {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', session.user.id)
             .maybeSingle();
           
+          if (profileError) {
+            console.error("Error fetching profile:", profileError);
+            return;
+          }
+
+          console.log("Current profile:", profile);
+          console.log("Attempting role:", role);
+          
           if (profile?.role === role) {
             navigate(`/dashboard/${role}`);
+          } else if (profile) {
+            // User is logged in but with wrong role
+            await supabase.auth.signOut();
           }
         } catch (error) {
           console.error("Error checking profile:", error);
@@ -103,6 +113,8 @@ const Auth = () => {
         if (signInError) throw signInError;
         if (!signInData.user) throw new Error("No user found");
 
+        console.log("Sign in successful, checking profile...");
+
         // Verify user's role
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -110,12 +122,24 @@ const Auth = () => {
           .eq('id', signInData.user.id)
           .maybeSingle();
 
-        if (profileError || !profile) {
+        console.log("Profile check result:", { profile, profileError });
+
+        if (profileError) {
+          console.error("Profile error:", profileError);
+          await supabase.auth.signOut();
+          throw new Error("Failed to verify profile");
+        }
+
+        if (!profile) {
+          console.error("No profile found");
           await supabase.auth.signOut();
           throw new Error("Profile not found");
         }
 
+        console.log("Comparing roles:", { profileRole: profile.role, attemptedRole: role });
+
         if (profile.role !== role) {
+          console.error("Role mismatch:", { profileRole: profile.role, attemptedRole: role });
           await supabase.auth.signOut();
           throw new Error("incorrect_role");
         }
@@ -141,6 +165,8 @@ const Auth = () => {
 
         if (signUpError) throw signUpError;
         if (!signUpData.user) throw new Error("Failed to create user");
+
+        console.log("Sign up successful, creating profile...");
 
         // Create profile with role
         const { error: profileError } = await supabase
