@@ -1,3 +1,4 @@
+
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,14 +50,13 @@ const Auth = () => {
           
           if (profileError) {
             console.error("Error fetching profile:", profileError);
+            await supabase.auth.signOut();
             return;
           }
 
           if (profile?.role === role) {
-            console.log("User already logged in with correct role, redirecting...");
             navigate(`/dashboard/${role}`);
           } else if (profile) {
-            console.log("User logged in with wrong role, signing out...");
             await supabase.auth.signOut();
             toast({
               variant: "destructive",
@@ -66,6 +66,7 @@ const Auth = () => {
           }
         } catch (error) {
           console.error("Error checking profile:", error);
+          await supabase.auth.signOut();
         }
       }
     };
@@ -124,26 +125,18 @@ const Auth = () => {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Profile error:", profileError);
           await supabase.auth.signOut();
           throw new Error("Failed to verify profile");
         }
 
         if (!profile) {
-          console.error("No profile found");
           await supabase.auth.signOut();
           throw new Error("Profile not found");
         }
 
         if (profile.role !== role) {
-          console.error("Role mismatch:", { profileRole: profile.role, attemptedRole: role });
           await supabase.auth.signOut();
-          toast({
-            variant: "destructive",
-            title: "Wrong role",
-            description: `You are registered as a ${roleLabels[profile.role]}. Please sign in with your correct role.`,
-          });
-          return;
+          throw new Error("incorrect_role");
         }
 
         toast({
@@ -151,8 +144,6 @@ const Auth = () => {
           description: "Successfully signed in!",
         });
 
-        // Ensure we navigate to the dashboard
-        console.log("Navigating to dashboard:", `/dashboard/${role}`);
         navigate(`/dashboard/${role}`, { replace: true });
       } else {
         // Sign up flow
@@ -170,7 +161,7 @@ const Auth = () => {
         if (signUpError) throw signUpError;
         if (!signUpData.user) throw new Error("Failed to create user");
 
-        // Create profile with role
+        // Create profile immediately
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -181,14 +172,13 @@ const Auth = () => {
           });
 
         if (profileError) {
-          console.error("Profile creation error:", profileError);
           await supabase.auth.signOut();
           throw new Error("Failed to create profile. Please try again.");
         }
 
         toast({
-          title: "Success",
-          description: "Please check your email to verify your account.",
+          title: "Account created",
+          description: "Please check your email to verify your account before signing in.",
         });
 
         // Reset form and switch to login

@@ -3,9 +3,8 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Disconnected configuration
-const SUPABASE_URL = "";
-const SUPABASE_PUBLISHABLE_KEY = "";
+const SUPABASE_URL = "https://bznodbcfmvpxzgscywie.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6bm9kYmNmbXZweHpnc2N5d2llIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzk4Njg4NzIsImV4cCI6MjA1NTQ0NDg3Mn0.axx5gsXEVVcww0QpEz4NtPysxqE-GDX2soXIwDdeocc";
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
