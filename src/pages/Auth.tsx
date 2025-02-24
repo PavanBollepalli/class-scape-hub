@@ -161,17 +161,20 @@ const Auth = () => {
         if (signUpError) throw signUpError;
         if (!signUpData.user) throw new Error("Failed to create user");
 
-        // Create profile immediately
+        // Create profile immediately after signup
         const { error: profileError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: signUpData.user.id,
             email,
             full_name: fullName,
             role,
+          }, { 
+            onConflict: 'id'
           });
 
         if (profileError) {
+          console.error("Profile creation error:", profileError);
           await supabase.auth.signOut();
           throw new Error("Failed to create profile. Please try again.");
         }
