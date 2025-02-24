@@ -89,32 +89,32 @@ export type Database = {
         Row: {
           attendance_percentage: number | null
           class_id: string | null
-          created_at: string
+          created_at: string | null
           email: string
           full_name: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           attendance_percentage?: number | null
           class_id?: string | null
-          created_at?: string
+          created_at?: string | null
           email: string
           full_name?: string | null
           id: string
           role: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           attendance_percentage?: number | null
           class_id?: string | null
-          created_at?: string
+          created_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
